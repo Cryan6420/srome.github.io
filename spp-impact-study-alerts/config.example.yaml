@@ -1,0 +1,57 @@
+# SPP Impact Study Monitor - Configuration
+# Copy this file to config.yaml and fill in your settings.
+# Secrets (passwords, API keys) can also be set via environment variables.
+
+# ── Monitoring Settings ──────────────────────────────────────────────
+monitor:
+  # Specific yearTypeId values to watch.
+  # Leave empty [] to auto-discover and monitor ALL study year types.
+  # Run `python main.py --discover` to see available IDs.
+  year_type_ids:
+    - 243   # Example: DISIS 2024 cluster
+    # - 146
+    # - 154
+
+  # Seconds to wait between HTTP requests (be respectful to the server)
+  request_delay: 2.0
+
+  # Number of retry attempts for failed HTTP requests
+  max_retries: 3
+
+# ── Notification Recipients ──────────────────────────────────────────
+# Can also be set via env vars: ALERT_EMAIL_RECIPIENTS, ALERT_SMS_RECIPIENTS
+notifications:
+  email_recipients:
+    - user@example.com
+    # - another@example.com
+
+  # Phone numbers in E.164 format (e.g., +12125551234)
+  sms_recipients: []
+    # - "+12125551234"
+
+# ── Email (SMTP) Settings ───────────────────────────────────────────
+# All values can be overridden with env vars:
+#   SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_ADDRESS
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  username: ""        # Your email or SMTP username
+  password: ""        # App password (NOT your regular password)
+  from_address: ""    # Sender address shown in emails
+  use_tls: true
+
+# ── SMS / Twilio Settings ───────────────────────────────────────────
+# All values can be overridden with env vars:
+#   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+twilio:
+  account_sid: ""
+  auth_token: ""
+  from_number: ""     # Your Twilio phone number (e.g., +15017122661)
+
+# ── Storage ──────────────────────────────────────────────────────────
+storage:
+  path: data/seen_studies.json
+
+# ── Logging ──────────────────────────────────────────────────────────
+# DEBUG, INFO, WARNING, ERROR
+log_level: INFO

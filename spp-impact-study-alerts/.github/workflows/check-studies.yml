@@ -1,0 +1,71 @@
+name: Check SPP Impact Studies
+
+on:
+  # Run every 6 hours
+  schedule:
+    - cron: "0 */6 * * *"
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (check without sending alerts)"
+        required: false
+        default: "false"
+        type: boolean
+
+jobs:
+  check-studies:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spp-impact-study-alerts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: spp-impact-study-alerts/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore seen studies cache
+        uses: actions/cache@v4
+        with:
+          path: spp-impact-study-alerts/data/
+          key: spp-seen-studies-${{ github.ref }}
+          restore-keys: |
+            spp-seen-studies-
+
+      - name: Check for new studies
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_EMAIL_RECIPIENTS: ${{ secrets.ALERT_EMAIL_RECIPIENTS }}
+          ALERT_SMS_RECIPIENTS: ${{ secrets.ALERT_SMS_RECIPIENTS }}
+          SPP_YEAR_TYPE_IDS: ${{ secrets.SPP_YEAR_TYPE_IDS }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python main.py --dry-run --log-level INFO
+          else
+            python main.py --log-level INFO
+          fi
+
+      - name: Save seen studies cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: spp-impact-study-alerts/data/
+          key: spp-seen-studies-${{ github.ref }}-${{ github.run_id }}
